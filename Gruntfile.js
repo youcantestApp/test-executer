@@ -3,7 +3,7 @@
 module.exports = function(grunt) {
 	// Unified Watch Object
 	var watchFiles = {
-		js: ['Gruntfile.js', 'queue-consumer.js', 'src/**/*.js'],
+		js: ['Gruntfile.js', 'src/**/*.js'],
 	};
 
 	// Project Configuration
@@ -14,7 +14,8 @@ module.exports = function(grunt) {
 				files: watchFiles.js,
       	tasks: ['newer:babel'],
 				options: {
-					livereload: true
+					reload: true,
+					debounceDelay: 300
 				}
 			},
 		},
@@ -30,9 +31,9 @@ module.exports = function(grunt) {
     },
     nodemon: {
 			dev: {
-				script: 'dist/queue-consumer.js',
+				script: 'dist/index.js',
 				options: {
-					nodeArgs: ['--debug', '--harmony'],
+					nodeArgs: ['--harmony'],
 					ext: 'js',
 					watch: watchFiles.js
 				}

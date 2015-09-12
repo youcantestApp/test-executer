@@ -1,0 +1,5 @@
+{
+  "environment" :  "production",
+  "mongoURL": "mongodb://admin:admin@mongodb:27017",
+  "mongoDatabaseName": "youcantest_db"
+}

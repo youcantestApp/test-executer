@@ -4,7 +4,7 @@ let mongoDB = require('mongodb'),
 q = require('q');
 
 let mongoURL = Symbol(),
-mongoDatabase = Symbol(),
+mongoDatabaseName = Symbol(),
 instance = Symbol();
 
 let collection = Symbol();
@@ -14,7 +14,8 @@ export default class BaseRepository {
     this[mongoURL] = config.mongoURL;
     this[mongoDatabaseName] = config.mongoDatabaseName;
     this[instance] = undefined;
-    this[collection] = undefined;
+
+    this.collection = undefined;
   }
   generateObjectIdFromString(str) {
     return mongoDB.ObjectID.createFromHexString(str);
@@ -48,13 +49,13 @@ export default class BaseRepository {
   	let defer = q.defer();
 
   	this.getConnection().then((db) => {
-  		let collection = db.collection(this[collection]);
+  		let collection = db.collection(this.collection);
 
   		collection.find({ _id: this.generateObjectIdFromString(id) }).toArray(
       (err, docs) => {
   			if (err != null) {
   				return defer.reject({
-            message:`error on find documents for collection ${this[collection]}`,
+            message:`error on find documents for collection ${this.collection}`,
             error: err
           });
   			}
@@ -69,13 +70,13 @@ export default class BaseRepository {
   	let defer = q.defer();
 
   	this.getConnection().then((db) => {
-  		let collection = db.collection(this[collection]);
+  		let collection = db.collection(this.collection);
 
   		if(object._id) {
   			collection.update({ _id: object._id }, object, (err, record) => {
   				if (err || !record.length) {
     				return defer.reject({
-              message:`error on update document in collection ${this[collection]}`,
+              message:`error on update document in collection ${this.collection}`,
               error: err
             });
           }
@@ -88,7 +89,7 @@ export default class BaseRepository {
   			collection.insert(object, (err, record) => {
   				if (err || !record.length) {
     				return defer.reject({
-              message:`error on save document in collection ${this[collection]}`,
+              message:`error on save document in collection ${this.collection}`,
               error: err
             });
           }
@@ -105,7 +106,7 @@ export default class BaseRepository {
   	let defer = q.defer();
 
   	this.getConnection().then((db) => {
-  		let collection = db.collection(this[collection]);
+  		let collection = db.collection(this.collection);
 
   		let objID_list = [];
   		list.forEach((element) => objID_list.push(this.generateObjectIdFromString(element)));
@@ -113,7 +114,7 @@ export default class BaseRepository {
   		collection.find({ _id: { '$in': listOfObjIds } }).toArray((err, docs) => {
   			if (err != null) {
   				return defer.reject({
-            message:`error on find documents in collection ${this[collection]}`,
+            message:`error on find documents in collection ${this.collection}`,
             error: err
           });
   			}
@@ -129,12 +130,12 @@ export default class BaseRepository {
   	let defer = q.defer();
 
   	this.getConnection().then((db) => {
-  		let collection = db.collection(this[collection]);
+  		let collection = db.collection(this.collection);
 
   		collection.find().toArray((err, docs) => {
   			if (err != null) {
   				return defer.reject({
-            message:`error on find documents in collection ${this[collection]}`,
+            message:`error on find documents in collection ${this.collection}`,
             error: err
           });
   			}
@@ -142,8 +143,8 @@ export default class BaseRepository {
         this.closeConnection();
   			defer.resolve(docs);
   		});
-
-    	return defer.promise;
     });
+
+  	return defer.promise;
   }
 }
