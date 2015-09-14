@@ -8,7 +8,7 @@ import wdioConfigs from './../../wdio.conf'
 let configs = Symbol();
 let instance = Symbol();
 
-export default class Webdriver {
+export default class WebDriver {
   constructor() {
     this[configs] = wdioConfigs;
 

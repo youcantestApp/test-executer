@@ -14,8 +14,7 @@ module.exports = function(grunt) {
 				files: watchFiles.js,
       	tasks: ['newer:babel'],
 				options: {
-					reload: true,
-					debounceDelay: 300
+					reload: true
 				}
 			},
 		},
@@ -35,7 +34,6 @@ module.exports = function(grunt) {
 				options: {
 					nodeArgs: ['--harmony'],
 					ext: 'js',
-					watch: watchFiles.js
 				}
 			}
 		},

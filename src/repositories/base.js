@@ -11,8 +11,8 @@ let collection = Symbol();
 
 export default class BaseRepository {
   constructor(config) {
-    this[mongoURL] = config.mongoURL;
-    this[mongoDatabaseName] = config.mongoDatabaseName;
+    this[mongoURL] = config.connections.nosql;
+    this[mongoDatabaseName] = config.nosql.database;
     this[instance] = undefined;
 
     this.collection = undefined;
