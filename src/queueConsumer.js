@@ -1,6 +1,6 @@
 'use strict';
 
-import WebDriverService from './services/webdriver';
+import ExecuterService from './services/executer';
 import QueueService from './services/queue';
 
 let configs = Symbol();
@@ -20,6 +20,11 @@ export default class QueueConsumer {
       try {
         scheduleQueueService.startListen((content) => {
           console.log('content received');
+
+          let executer = new ExecuterService();
+
+          executer.run(content);
+
         });
       }
       catch (err) {

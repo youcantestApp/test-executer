@@ -1,15 +1,7 @@
 'use strict';
 
-import {config as queueConfigs} from  './../../queue.config';
-import amqp from 'amqplib';
-import q from 'q';
-
-let instanceUrl = Symbol(), instanceConfig = Symbol();
-
-export default class QueueService {
-  constructor(instanceConfigs) {
-    this[instanceUrl] = instanceConfigs.connection;
-    this[instanceConfig] = instanceConfigs.queue;
+export default class TestRunnerService {
+  constructor() {
   }
 
   prepare() {
@@ -47,8 +39,6 @@ export default class QueueService {
       try {
         var content = JSON.parse(content);
 
-        this.channel.ack(`schedule ${content.scheduleId} received`);
-        
         handler(content);
       }
       catch(error) {
