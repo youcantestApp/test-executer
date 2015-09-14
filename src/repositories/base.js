@@ -1,7 +1,7 @@
 'use strict';
 
-let mongoDB = require('mongodb'),
-q = require('q');
+import mongoDB from 'mongodb';
+import q from 'q';
 
 let mongoURL = Symbol(),
 mongoDatabaseName = Symbol(),
