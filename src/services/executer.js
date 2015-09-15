@@ -2,17 +2,19 @@
 
 import q from 'q';
 
-import TestRunnerService from './services/testRunner';
-import TestRepository from './repositories/test';
-import ScheduleRepository from './repositories/schedule';
+import TestRunnerService from './testRunner';
+import TestRepository from './../repositories/test';
+import TestResultRepository from './../repositories/testResult';
+import ScheduleRepository from './../repositories/schedule';
 
-let scheduleRep = Symbol(), testRep = Symbol(), testRunner = Symbol(),
+let testResultRep = Symbol(), scheduleRep = Symbol(), testRep = Symbol(), testRunner = Symbol(),
 currUser = Symbol(), currTest = Symbol(), currSchedule = Symbol();
 
 export default class ExecuterService {
   constructor(config) {
     this[testRunner] = new TestRunnerService();
     this[testRep] = new TestRepository(config);
+    this[testResultRep] = new TestResultRepository(config);
     this[scheduleRep] = new ScheduleRepository(config);
   }
 
@@ -48,8 +50,8 @@ export default class ExecuterService {
   _executeTargetTest() {
     let defer = q.defer();
 
-    this[testRunner].prepare(this[currTest]).run().then((result) => {
-
+    this[testRunner].run(this[currTest]).then((result) => {
+      return defer.resolve(result);
     }, (err) => {
       return defer.reject(err);
     });
@@ -69,21 +71,24 @@ export default class ExecuterService {
   	data.executionDate = new Date();
 
     //TODO - ACERTAR ESSE TEST SUCCEED
-  	data.testSucceed = undefined;
+  	data.testSucceed = (() => {
+      let actSucceed = data.actions.length > 0 && (_.countBy(data.actions, 'result').success === this[currTest].actions.length);
+      let assSucceed = data.asserts.length > 0 && (_.countBy(data.asserts, 'result').success === this[currTest].asserts.length);
 
-    return this[testResultRep].saveOne(data);
+      return actSucceed && assSucceed;
+    })();
+
+    return this[testResultRep].save(data).then((res) => console.log('saved with success', res), (err) => console.log('err', err));
   }
 
-  run(scheduleId) {
-    let defer = q.defer();
+  run(data) {
+    let scheduleId = data.scheduleId;
 
-    this._getTargetTest(scheduleId)
-    .then(this._executeTargetTest)
-    .then(this._persistResult)
+    return this._getTargetTest(scheduleId)
+    .then((res) => { return this._executeTargetTest(); })
+    .then((res) => { return this._persistResult(res); })
     .fail((err) => {
        return defer.reject(err);
     });
-
-    return defer.promise;
   }
 }

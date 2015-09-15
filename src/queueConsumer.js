@@ -19,12 +19,21 @@ export default class QueueConsumer {
       console.log("prepared", msg);
       try {
         scheduleQueueService.startListen((content) => {
-          console.log('content received');
+          console.log('content received', content);
 
-          let executer = new ExecuterService();
+          let executer = new ExecuterService(this[configs]);
 
-          executer.run(content);
-
+          return executer.run(content).then((res) => {
+            console.log({
+              message:'success on execute and persist test',
+              data: res
+            });
+          }, (err) => {
+            console.log({
+              message:'error on execute and persist test',
+              data: err
+            });
+          });
         });
       }
       catch (err) {

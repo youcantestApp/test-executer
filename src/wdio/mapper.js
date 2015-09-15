@@ -1,6 +1,6 @@
 'use strict';
 
-export default mapByAlias = (alias) => {
+export default (alias) => {
   if(this[alias] && typeof(this[alias] === 'function')) {
     return this[alias];
   }

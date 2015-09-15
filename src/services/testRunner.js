@@ -1,6 +1,7 @@
 'use strict';
 
 import q from 'q';
+import _ from 'lodash';
 import WebDriver from './../wdio/webdriver'
 
 let wdInstance = Symbol();
@@ -11,12 +12,17 @@ export default class TestRunnerService {
   }
 
   run(test) {
-    this[starter] = q.defer();
+    let starter = q.defer();
+
+    let result = {
+      actions: [],
+      asserts: []
+    };
 
     //initial function for trigger
-    let executionSequence = () => {
-      return this[starter].promise;
-    };
+    let executionSequence = (() => {
+      return starter.promise;
+    })();
 
     //chaining start wdio fn
     executionSequence = executionSequence.then(() =>{
@@ -24,26 +30,39 @@ export default class TestRunnerService {
       return q.defer().resolve();
     });
 
+
     //foreach action, chaining in sequence
     _.each(test.actions, (element) => {
       executionSequence = executionSequence.then(() => {
-        return this[wdInstance].execute(element.type, element);
+        return this[wdInstance].execute(element.type, element).then((res) => {
+          result.actions.push(res);
+        }, (err) => {
+          result.actions.push(err);
+        });
       });
     });
 
     //foreach assert, chaining in sequence
     _.each(test.asserts, (element) => {
       executionSequence = executionSequence.then(() => {
-        return this[wdInstance].execute(element.type, element);
+        return this[wdInstance].execute(element.type, element).then((res) =>{
+          result.asserts.push(res);
+        }, (err) => {
+          result.asserts.push(err);
+        });
       });
     });
 
     //chaining start wdio fn
-    executionSequence = executionSequence.then(() =>{
+    let finisher = q.defer();
+    executionSequence = executionSequence.finally(() => {
       this[wdInstance].end();
-      return q.defer().resolve();
+
+      return finisher.resolve(result);
     });
 
-    this[sequence] = executionSequence;
+    starter.resolve();
+
+    return finisher.promise;
   }
 }

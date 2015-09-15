@@ -35,12 +35,14 @@ export default class WebDriver {
   openUrl(url) {
     return this[instance].url(url).then((res) => {
       return {
+        result: 'success',
         message: `url ${url} opened correctly`,
         data: res,
         params: url
       };
     }).catch((err) => {
       return {
+        result: 'fail',
         message: `error on open url ${url}`,
         error: err,
         params: url
@@ -51,12 +53,14 @@ export default class WebDriver {
   click(params) {
     return this[instance].click(params.selector).then((res) => {
       return {
+        result: 'success',
         message: `success on click in element ${params.selector}`,
         data: res,
         params: params
       };
     }).catch((err) => {
       return {
+        result: 'fail',
         message: `error on click in element ${params.selector}`,
         error: err,
         params: params
@@ -67,12 +71,14 @@ export default class WebDriver {
   setValue(params) {
     return this[instance].setValue(params.selector, params.value).then((res) => {
       return {
+        result: 'success',
         message: `success on set value ${params.value} in element ${params.selector}`,
         data: res,
         params: params
       };
     }).catch((err) => {
       return {
+        result: 'fail',
         message: `error on set value ${params.value} in element ${params.selector}`,
         error: err,
         params: params
@@ -86,6 +92,7 @@ export default class WebDriver {
     this[instance].getAttribute(params.selector, 'class').then((res) => {
       if (!rest || !res.length) {
         return defer.resolve({
+          result: 'fail',
           message: `there are no classes on element ${params.selector}`,
           error: err,
           params: params
@@ -94,6 +101,7 @@ export default class WebDriver {
 
       if (_.some(res.split(" "), params.value)) {
         return defer.resolve({
+          result: 'success',
           message: `className ${params.value} found in element ${params.selector}`,
           data: res,
           params: params
@@ -101,12 +109,14 @@ export default class WebDriver {
       }
 
       return defer.reject({
+        result: 'fail',
         message: `className ${params.value} not found in element ${params.selector}`,
         data: res,
         params: params
       });
     }).catch((err) => {
       return defer.reject({
+        result: 'fail',
         message: `error on get classes of element ${params.selector}`,
         error: err,
         params: params
@@ -122,6 +132,7 @@ export default class WebDriver {
     this[instance].getValue(params.selector).then((res) => {
       if (res === params.value) {
         return defer.resolve({
+          result: 'success',
           message: `The value ${params.value} of element ${params.selector} is same as expected`,
           data: res,
           params: params
@@ -129,12 +140,14 @@ export default class WebDriver {
       }
 
       return defer.resolve({
+        result: 'fail',
         message: `The value ${params.value} of element ${params.selector} is not same as expected`,
         data: res,
         params: params
       });
     }).catch((err) => {
       return defer.reject({
+        result: 'fail',
         message: `error on get actual value of element ${params.selector}`,
         error: err,
         params: params
@@ -150,6 +163,7 @@ export default class WebDriver {
     this[instance].isVisible(params.selector).then((visible) => {
       if (visible) {
         return defer.resolve({
+          result: 'success',
           message: `The element ${params.selector} is visible`,
           data: res,
           params: params
@@ -157,12 +171,14 @@ export default class WebDriver {
       }
 
       return defer.resolve({
+        result: 'fail',
         message: `The element ${params.selector} is not visible`,
         data: res,
         params: params
       });
     }).catch((err) => {
       return defer.reject({
+        result: 'fail',
         message: `error on get visibility of element ${params.selector}`,
         error: err,
         params: params
@@ -178,18 +194,21 @@ export default class WebDriver {
     this[instance].isExisting(params.selector).then((exist) => {
       if (exist) {
         return defer.resolve({
+          result: 'success',
           message: `The element ${params.selector} is exists in page`,
           data: res,
           params: params
         });
       }
       return defer.resolve({
+        result: 'fail',
         message: `The element ${params.selector} not exist in page`,
         data: res,
         params: params
       });
     }).catch((err) => {
       return defer.reject({
+        result: 'fail',
         message: `error on check existence of element ${params.selector} in page`,
         error: err,
         params: params
@@ -205,18 +224,21 @@ export default class WebDriver {
     this[instance].url().then((res) => {
       if (res.value.indexOf(params.value) > -1) {
         return defer.resolve({
+          result: 'success',
           message: `Actual url is same as expected`,
           data: res,
           params: params
         });
       }
       return defer.resolve({
+        result: 'fail',
         message: `Actual url is not same as ${params.value}`,
         data: res,
         params: params
       });
     }).catch((err) => {
       return defer.reject({
+        result: 'fail',
         message: `error on get actual url`,
         error: err,
         params: params

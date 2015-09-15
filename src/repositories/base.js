@@ -61,9 +61,11 @@ export default class BaseRepository {
   			}
 
         this.closeConnection();
-  			defer.resolve(docs[0]);
+  			return defer.resolve(docs[0]);
   		});
-  	});
+  	}, (err) => {
+      defer.reject(err);
+    });
   	return defer.promise;
   }
   save(object) {
@@ -73,30 +75,28 @@ export default class BaseRepository {
   		let collection = db.collection(this.collection);
 
   		if(object._id) {
-  			collection.update({ _id: object._id }, object, (err, record) => {
-  				if (err || !record.length) {
-    				return defer.reject({
-              message:`error on update document in collection ${this.collection}`,
-              error: err
-            });
-          }
-
+  			collection.update({ _id: object._id }, object).then((record) => {
           this.closeConnection();
+
   				defer.resolve(record[0]._id.tostring());
-  			});
+  			}, (err) => {
+  				return defer.reject({
+            message:`error on update document in collection ${this.collection}`,
+            error: err
+          });
+        });
   		}
   		else {
-  			collection.insert(object, (err, record) => {
-  				if (err || !record.length) {
-    				return defer.reject({
-              message:`error on save document in collection ${this.collection}`,
-              error: err
-            });
-          }
-
+  			collection.insert(object).then((record) => {
           this.closeConnection();
-  				defer.resolve(record[0]._id.tostring());
-  			});
+
+  				return defer.resolve(record);
+  			}, (err) => {
+  				return defer.reject({
+            message:`error on save document in collection ${this.collection}`,
+            error: err
+          });
+        });
   		}
   	});
 

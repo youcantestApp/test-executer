@@ -42,18 +42,27 @@ export default class QueueService {
     }
 
     this.channel.consume(this[instanceConfig].main, (message) => {
-      console.log("[x] message received", "content", message.content.toString());
-      var content = message.content.toString();
-      try {
-        var content = JSON.parse(content);
+      console.log("[x] message received");
+      this.channel.ack(message);
 
-        this.channel.ack(`schedule ${content.scheduleId} received`);
-        
-        handler(content);
+      try {
+        let content = message.content.toString();
+        content = JSON.parse(content);
+
+        handler(content).fail(()=> {
+          this.publishError(message.content);
+        });
       }
       catch(error) {
-        console.log({message: 'error on parse message', err:error});
+        this.publishError(message.content);
+        console.log({message: 'error on parse message', err: error});
       }
     }, queueConfigs.queue.consumeOpts);
   }
+
+  publishError(message) {
+    console.log('publishing error');
+    return this.channel.sendToQueue(this[instanceConfig].error, message);
+  }
+
 }
