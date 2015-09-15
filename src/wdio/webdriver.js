@@ -3,51 +3,79 @@
 import webdriverio from 'webdriverio';
 import q from 'q';
 import _ from 'lodash';
-import functionMapper from './mapper';
 import wdioConfigs from './../../wdio.conf'
 
-let configs = Symbol(), instance = Symbol();
+let configs = Symbol('configs'), instance = Symbol('instance');
 
 export default class WebDriver {
   constructor() {
     this[configs] = wdioConfigs;
-
     this[instance] = webdriverio.remote(this[configs]);
   }
 
   start() {
-    this[instance] = this[instance].init();
-
-    return this;
+    return this[instance].init().then((res) => {
+      console.log('started');
+    });
   }
 
   end() {
     this[instance].end();
     this[instance] = undefined;
 
+    console.log("finish");
+
     return this;
   }
 
   execute(alias, data) {
-    return functionMapper.bind(this, alias)(data);
+    let fn = this.fnMapper(alias);
+
+    return q.ninvoke(this, fn, data).then((data) => {
+      return data;
+    }, (err) => {
+      return err;
+    });
+  }
+
+  fnMapper(alias) {
+    if(typeof(this[alias]) === 'function') {
+      return alias;
+    }
+
+    if(alias === 'assertValue'){
+      return 'checkValue';
+    }
+    if(alias === 'isElementVisible'){
+      return 'checkVisibility';
+    }
+    if(alias === 'isElementExists'){
+      return 'elementExists';
+    }
+
+    throw 'Function not found!';
   }
 
   openUrl(url) {
-    return this[instance].url(url).then((res) => {
-      return {
+    let defer = q.defer();
+
+    this[instance].url(url).then((res) => {
+      return defer.resolve({
         result: 'success',
         message: `url ${url} opened correctly`,
         data: res,
         params: url
-      };
-    }).catch((err) => {
-      return {
+      });
+    },(err) => {
+      return defer.reject({
         result: 'fail',
         message: `error on open url ${url}`,
         error: err,
         params: url
-      };
+      });
     });
+
+    return defer.promise;
   }
 
   click(params) {
@@ -58,7 +86,7 @@ export default class WebDriver {
         data: res,
         params: params
       };
-    }).catch((err) => {
+    }, (err) => {
       return {
         result: 'fail',
         message: `error on click in element ${params.selector}`,
@@ -76,7 +104,7 @@ export default class WebDriver {
         data: res,
         params: params
       };
-    }).catch((err) => {
+    },(err) => {
       return {
         result: 'fail',
         message: `error on set value ${params.value} in element ${params.selector}`,
@@ -114,7 +142,7 @@ export default class WebDriver {
         data: res,
         params: params
       });
-    }).catch((err) => {
+    },(err) => {
       return defer.reject({
         result: 'fail',
         message: `error on get classes of element ${params.selector}`,
@@ -145,7 +173,7 @@ export default class WebDriver {
         data: res,
         params: params
       });
-    }).catch((err) => {
+    },(err) => {
       return defer.reject({
         result: 'fail',
         message: `error on get actual value of element ${params.selector}`,
@@ -165,7 +193,7 @@ export default class WebDriver {
         return defer.resolve({
           result: 'success',
           message: `The element ${params.selector} is visible`,
-          data: res,
+          data: visible,
           params: params
         });
       }
@@ -173,10 +201,10 @@ export default class WebDriver {
       return defer.resolve({
         result: 'fail',
         message: `The element ${params.selector} is not visible`,
-        data: res,
+        data: visible,
         params: params
       });
-    }).catch((err) => {
+    }, (err) => {
       return defer.reject({
         result: 'fail',
         message: `error on get visibility of element ${params.selector}`,
@@ -189,33 +217,29 @@ export default class WebDriver {
   }
 
   elementExists(params) {
-    let defer = q.defer();
-
-    this[instance].isExisting(params.selector).then((exist) => {
+    return this[instance].isExisting(params.selector).then((exist) => {
       if (exist) {
-        return defer.resolve({
+        return {
           result: 'success',
           message: `The element ${params.selector} is exists in page`,
-          data: res,
+          data: exist,
           params: params
-        });
+        };
       }
-      return defer.resolve({
+      return {
         result: 'fail',
         message: `The element ${params.selector} not exist in page`,
-        data: res,
+        data: exist,
         params: params
-      });
-    }).catch((err) => {
-      return defer.reject({
+      };
+    },(err) => {
+      return {
         result: 'fail',
         message: `error on check existence of element ${params.selector} in page`,
         error: err,
         params: params
-      });
+      };
     });
-
-    return defer.promise;
   }
 
   checkUrl(params) {
@@ -236,7 +260,7 @@ export default class WebDriver {
         data: res,
         params: params
       });
-    }).catch((err) => {
+    },(err) => {
       return defer.reject({
         result: 'fail',
         message: `error on get actual url`,

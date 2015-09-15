@@ -15,6 +15,7 @@ export default class TestRunnerService {
     let starter = q.defer();
 
     let result = {
+      context: [],
       actions: [],
       asserts: []
     };
@@ -26,43 +27,53 @@ export default class TestRunnerService {
 
     //chaining start wdio fn
     executionSequence = executionSequence.then(() =>{
-      this[wdInstance].start();
-      return q.defer().resolve();
-    });
+      let defer = q.defer();
 
+      this[wdInstance].start().then((res) => {
+        this[wdInstance].openUrl(test.context.url).then((data) => {
+          result.context.push(data);
 
-    //foreach action, chaining in sequence
-    _.each(test.actions, (element) => {
-      executionSequence = executionSequence.then(() => {
-        return this[wdInstance].execute(element.type, element).then((res) => {
-          result.actions.push(res);
+          return defer.resolve(data);
         }, (err) => {
-          result.actions.push(err);
+          result.context.push(err);
+
+          return defer.reject(err);
         });
+      }, (err) => {
+        result.context.push(err);
+
+        return defer.reject(err);
       });
+
+      return defer.promise;
     });
 
-    //foreach assert, chaining in sequence
-    _.each(test.asserts, (element) => {
+    let chainFn = (element) => {
       executionSequence = executionSequence.then(() => {
-        return this[wdInstance].execute(element.type, element).then((res) =>{
+        let fnName = this[wdInstance].fnMapper(element.type);
+
+        return this[wdInstance][fnName](element).then((res) => {
           result.asserts.push(res);
         }, (err) => {
           result.asserts.push(err);
         });
       });
-    });
+    };
+
+
+    //foreach action, chaining in sequence
+    _.each(test.actions, chainFn);
+    //foreach assert, chaining in sequence
+    _.each(test.asserts, chainFn);
 
     //chaining start wdio fn
-    let finisher = q.defer();
-    executionSequence = executionSequence.finally(() => {
+    executionSequence = executionSequence.then(() => {
       this[wdInstance].end();
-
-      return finisher.resolve(result);
+      return result;
     });
 
     starter.resolve();
 
-    return finisher.promise;
+    return executionSequence;
   }
 }

@@ -1,6 +1,7 @@
 'use strict';
 
 import q from 'q';
+import _ from 'lodash';
 
 import TestRunnerService from './testRunner';
 import TestRepository from './../repositories/test';
@@ -72,7 +73,7 @@ export default class ExecuterService {
 
     //TODO - ACERTAR ESSE TEST SUCCEED
   	data.testSucceed = (() => {
-      let actSucceed = data.actions.length > 0 && (_.countBy(data.actions, 'result').success === this[currTest].actions.length);
+      let actSucceed = data.actions.length === 0 || (_.countby(data.actions, 'result').success === this[currtest].actions.length);
       let assSucceed = data.asserts.length > 0 && (_.countBy(data.asserts, 'result').success === this[currTest].asserts.length);
 
       return actSucceed && assSucceed;
