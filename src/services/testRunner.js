@@ -1,49 +1,49 @@
 'use strict';
 
+import q from 'q';
+import WebDriver from './../wdio/webdriver'
+
+let wdInstance = Symbol();
+
 export default class TestRunnerService {
   constructor() {
+    this[wdInstance] = new WebDriver();
   }
 
-  prepare() {
-    let defer = q.defer();
+  run(test) {
+    this[starter] = q.defer();
 
-    amqp.connect(this[instanceUrl]).then((conn) => {
-      conn.createChannel().then((channel) => {
-      	var queue = channel.assertQueue(this[instanceConfig].main, queueConfigs.queue.options).then(() => {
-          channel.prefetch(queueConfigs.PREFETCH_NUMBER);
+    //initial function for trigger
+    let executionSequence = () => {
+      return this[starter].promise;
+    };
 
-          this.channel = channel;
-
-          defer.resolve({message: 'ready to consume'});
-        }, (err) => {
-          defer.reject({message: 'error on check or create queue', err: err});
-        });
-      }, (err) => {
-        defer.reject({message: 'error on create or get queue channel', err: err});
-      });
-    }, (err) => {
-      defer.reject({message: 'error on connect to queue', err: err});
+    //chaining start wdio fn
+    executionSequence = executionSequence.then(() =>{
+      this[wdInstance].start();
+      return q.defer().resolve();
     });
 
-    return defer.promise;
-  }
+    //foreach action, chaining in sequence
+    _.each(test.actions, (element) => {
+      executionSequence = executionSequence.then(() => {
+        return this[wdInstance].execute(element.type, element);
+      });
+    });
 
-  startListen(handler) {
-    if(typeof(handler) !== 'function') {
-      throw 'callback parameter is not a function';
-    }
+    //foreach assert, chaining in sequence
+    _.each(test.asserts, (element) => {
+      executionSequence = executionSequence.then(() => {
+        return this[wdInstance].execute(element.type, element);
+      });
+    });
 
-    this.channel.consume(this[instanceConfig].main, (message) => {
-      console.log("[x] message received", "content", message.content.toString());
-      var content = message.content.toString();
-      try {
-        var content = JSON.parse(content);
+    //chaining start wdio fn
+    executionSequence = executionSequence.then(() =>{
+      this[wdInstance].end();
+      return q.defer().resolve();
+    });
 
-        handler(content);
-      }
-      catch(error) {
-        console.log({message: 'error on parse message', err:error});
-      }
-    }, queueConfigs.queue.consumeOpts);
+    this[sequence] = executionSequence;
   }
 }

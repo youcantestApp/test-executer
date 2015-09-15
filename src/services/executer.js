@@ -48,7 +48,7 @@ export default class ExecuterService {
   _executeTargetTest() {
     let defer = q.defer();
 
-    this[testRunner].prepare().run().then((result) => {
+    this[testRunner].prepare(this[currTest]).run().then((result) => {
 
     }, (err) => {
       return defer.reject(err);

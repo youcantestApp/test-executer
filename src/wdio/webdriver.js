@@ -3,10 +3,10 @@
 import webdriverio from 'webdriverio';
 import q from 'q';
 import _ from 'lodash';
+import functionMapper from './mapper';
 import wdioConfigs from './../../wdio.conf'
 
-let configs = Symbol();
-let instance = Symbol();
+let configs = Symbol(), instance = Symbol();
 
 export default class WebDriver {
   constructor() {
@@ -14,27 +14,36 @@ export default class WebDriver {
 
     this[instance] = webdriverio.remote(this[configs]);
   }
+
   start() {
     this[instance] = this[instance].init();
 
     return this;
   }
+
   end() {
     this[instance].end();
     this[instance] = undefined;
 
     return this;
   }
+
+  execute(alias, data) {
+    return functionMapper.bind(this, alias)(data);
+  }
+
   openUrl(url) {
     return this[instance].url(url).then((res) => {
       return {
         message: `url ${url} opened correctly`,
-        data: res
+        data: res,
+        params: url
       };
     }).catch((err) => {
       return {
         message: `error on open url ${url}`,
-        error: err
+        error: err,
+        params: url
       };
     });
   }
@@ -43,12 +52,14 @@ export default class WebDriver {
     return this[instance].click(params.selector).then((res) => {
       return {
         message: `success on click in element ${params.selector}`,
-        data: res
+        data: res,
+        params: params
       };
     }).catch((err) => {
       return {
         message: `error on click in element ${params.selector}`,
-        error: err
+        error: err,
+        params: params
       };
     });
   }
@@ -57,12 +68,14 @@ export default class WebDriver {
     return this[instance].setValue(params.selector, params.value).then((res) => {
       return {
         message: `success on set value ${params.value} in element ${params.selector}`,
-        data: res
+        data: res,
+        params: params
       };
     }).catch((err) => {
       return {
         message: `error on set value ${params.value} in element ${params.selector}`,
-        error: err
+        error: err,
+        params: params
       };
     });
   }
@@ -74,25 +87,29 @@ export default class WebDriver {
       if (!rest || !res.length) {
         return defer.resolve({
           message: `there are no classes on element ${params.selector}`,
-          error: err
+          error: err,
+          params: params
         });
       }
 
       if (_.some(res.split(" "), params.value)) {
         return defer.resolve({
           message: `className ${params.value} found in element ${params.selector}`,
-          data: res
+          data: res,
+          params: params
         });
       }
 
       return defer.reject({
         message: `className ${params.value} not found in element ${params.selector}`,
-        data: res
+        data: res,
+        params: params
       });
     }).catch((err) => {
       return defer.reject({
         message: `error on get classes of element ${params.selector}`,
-        error: err
+        error: err,
+        params: params
       });
     });
 
@@ -106,18 +123,21 @@ export default class WebDriver {
       if (res === params.value) {
         return defer.resolve({
           message: `The value ${params.value} of element ${params.selector} is same as expected`,
-          data: res
+          data: res,
+          params: params
         });
       }
 
       return defer.resolve({
         message: `The value ${params.value} of element ${params.selector} is not same as expected`,
-        data: res
+        data: res,
+        params: params
       });
     }).catch((err) => {
       return defer.reject({
         message: `error on get actual value of element ${params.selector}`,
-        error: err
+        error: err,
+        params: params
       });
     });
 
@@ -131,18 +151,21 @@ export default class WebDriver {
       if (visible) {
         return defer.resolve({
           message: `The element ${params.selector} is visible`,
-          data: res
+          data: res,
+          params: params
         });
       }
 
       return defer.resolve({
         message: `The element ${params.selector} is not visible`,
-        data: res
+        data: res,
+        params: params
       });
     }).catch((err) => {
       return defer.reject({
         message: `error on get visibility of element ${params.selector}`,
-        error: err
+        error: err,
+        params: params
       });
     });
 
@@ -156,17 +179,20 @@ export default class WebDriver {
       if (exist) {
         return defer.resolve({
           message: `The element ${params.selector} is exists in page`,
-          data: res
+          data: res,
+          params: params
         });
       }
       return defer.resolve({
         message: `The element ${params.selector} not exist in page`,
-        data: res
+        data: res,
+        params: params
       });
     }).catch((err) => {
       return defer.reject({
         message: `error on check existence of element ${params.selector} in page`,
-        error: err
+        error: err,
+        params: params
       });
     });
 
@@ -180,17 +206,20 @@ export default class WebDriver {
       if (res.value.indexOf(params.value) > -1) {
         return defer.resolve({
           message: `Actual url is same as expected`,
-          data: res
+          data: res,
+          params: params
         });
       }
       return defer.resolve({
         message: `Actual url is not same as ${params.value}`,
-        data: res
+        data: res,
+        params: params
       });
     }).catch((err) => {
       return defer.reject({
         message: `error on get actual url`,
-        error: err
+        error: err,
+        params: params
       });
     });
 
