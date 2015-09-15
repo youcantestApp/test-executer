@@ -25,7 +25,7 @@ export default class ExecuterService {
     //getting schedule data from database
     this[scheduleRep].getById(scheduleId).then((schedule) => {
       if (!schedule || !schedule.testId) {
-        return defer.reject({message: "Error on retrieve schedule ${scheduleId} data"});
+        return defer.reject({message: `Error on retrieve schedule ${scheduleId} data`});
   		}
 
       this[currUser] = schedule.user;
@@ -35,7 +35,7 @@ export default class ExecuterService {
         this[currTest] = test;
 
         return defer.resolve({
-          message: "Success on retrieve test from schedule ${scheduleId}",
+          message: `Success on retrieve test from schedule ${scheduleId}`,
           data: test
         });
       }, (err) => {
@@ -71,9 +71,8 @@ export default class ExecuterService {
   	data.asserts = result.asserts;
   	data.executionDate = new Date();
 
-    //TODO - ACERTAR ESSE TEST SUCCEED
   	data.testSucceed = (() => {
-      let actSucceed = data.actions.length === 0 || (_.countby(data.actions, 'result').success === this[currtest].actions.length);
+      let actSucceed = data.actions.length === 0 || (_.countBy(data.actions, 'result').success === this[currTest].actions.length);
       let assSucceed = data.asserts.length > 0 && (_.countBy(data.asserts, 'result').success === this[currTest].asserts.length);
 
       return actSucceed && assSucceed;
@@ -88,8 +87,5 @@ export default class ExecuterService {
     return this._getTargetTest(scheduleId)
     .then((res) => { return this._executeTargetTest(); })
     .then((res) => { return this._persistResult(res); })
-    .fail((err) => {
-       return defer.reject(err);
-    });
   }
 }

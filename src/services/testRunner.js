@@ -21,7 +21,7 @@ export default class TestRunnerService {
     };
 
     //initial function for trigger
-    let executionSequence = (() => {
+    var executionSequence = (() => {
       return starter.promise;
     })();
 
@@ -62,9 +62,30 @@ export default class TestRunnerService {
 
 
     //foreach action, chaining in sequence
-    _.each(test.actions, chainFn);
+    _.each(test.actions, (element) => {
+      executionSequence = executionSequence.then(() => {
+        let fnName = this[wdInstance].fnMapper(element.type);
+
+        return this[wdInstance][fnName](element).then((res) => {
+          result.actions.push(res);
+        }, (err) => {
+          result.actions.push(err);
+        });
+      });
+    });
+
     //foreach assert, chaining in sequence
-    _.each(test.asserts, chainFn);
+    _.each(test.asserts, (element) => {
+      executionSequence = executionSequence.then(() => {
+        let fnName = this[wdInstance].fnMapper(element.type);
+
+        return this[wdInstance][fnName](element).then((res) => {
+          result.asserts.push(res);
+        }, (err) => {
+          result.asserts.push(err);
+        });
+      });
+    });
 
     //chaining start wdio fn
     executionSequence = executionSequence.then(() => {
