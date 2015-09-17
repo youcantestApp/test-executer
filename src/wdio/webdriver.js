@@ -139,7 +139,7 @@ export default class WebDriver {
       return defer.reject({
         result: 'fail',
         message: `className ${params.value} not found in element ${params.selector}`,
-        data: res,
+        error: res,
         params: params
       });
     },(err) => {
@@ -170,7 +170,7 @@ export default class WebDriver {
       return defer.resolve({
         result: 'fail',
         message: `The value ${params.value} of element ${params.selector} is not same as expected`,
-        data: res,
+        error: res,
         params: params
       });
     },(err) => {
@@ -201,7 +201,7 @@ export default class WebDriver {
       return defer.resolve({
         result: 'fail',
         message: `The element ${params.selector} is not visible`,
-        data: visible,
+        error: visible,
         params: params
       });
     }, (err) => {
@@ -229,7 +229,7 @@ export default class WebDriver {
       return {
         result: 'fail',
         message: `The element ${params.selector} not exist in page`,
-        data: exist,
+        error: exist,
         params: params
       };
     },(err) => {
@@ -257,7 +257,7 @@ export default class WebDriver {
       return defer.resolve({
         result: 'fail',
         message: `Actual url is not same as ${params.value}`,
-        data: res,
+        error: res,
         params: params
       });
     },(err) => {

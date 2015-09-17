@@ -37,13 +37,6 @@ export default class BaseRepository {
 
   	return defer.promise;
   }
-  closeConnection() {
-  	if(this[instance]) {
-      this[instance].close();
-    }
-    this[instance] = undefined;
-  }
-
 
   getById(id) {
   	let defer = q.defer();
@@ -60,7 +53,7 @@ export default class BaseRepository {
           });
   			}
 
-        this.closeConnection();
+        db.close();
   			return defer.resolve(docs[0]);
   		});
   	}, (err) => {
@@ -76,7 +69,7 @@ export default class BaseRepository {
 
   		if(object._id) {
   			collection.update({ _id: object._id }, object).then((record) => {
-          this.closeConnection();
+          db.close();
 
   				defer.resolve(record[0]._id.tostring());
   			}, (err) => {
@@ -88,7 +81,7 @@ export default class BaseRepository {
   		}
   		else {
   			collection.insert(object).then((record) => {
-          this.closeConnection();
+          db.close();
 
   				return defer.resolve(record);
   			}, (err) => {
@@ -119,7 +112,7 @@ export default class BaseRepository {
           });
   			}
 
-        this.closeConnection();
+        db.close();
   			defer.resolve(docs);
   		});
   	});
@@ -140,7 +133,7 @@ export default class BaseRepository {
           });
   			}
 
-        this.closeConnection();
+        db.close();
   			defer.resolve(docs);
   		});
     });
