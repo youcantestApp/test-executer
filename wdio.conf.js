@@ -1,5 +1,4 @@
 exports.config = {
-
     port:4444,
     desiredCapabilities: [{
         browserName: 'phantomjs'
@@ -7,7 +6,7 @@ exports.config = {
     logLevel: 'verbose',
     coloredLogs: true,
     screenshotPath: './errorShots/',
-    waitforTimeout: 5000,
+    waitforTimeout: 120000,
     onPrepare: function() {
         // do something
     },
