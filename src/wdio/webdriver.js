@@ -271,4 +271,46 @@ export default class WebDriver {
 
     return defer.promise;
   }
+
+  checkHref(params) {
+    let defer = q.defer();
+
+    this[instance].getAttribute(params.selector, 'href').then((res) => {
+      if (!res || !res.length) {
+        return defer.resolve({
+          result: 'fail',
+          message: `there are no href on element ${params.selector}`,
+          error: err,
+          params: params
+        });
+      }
+
+      if((params.contains && res.indexOf(params.value) > -1) ||
+      (!params.contains && res.toLowerCase() === params.value.toLowerCase())) {
+        return defer.resolve({
+          result: 'success',
+          message: `href ${params.value} found in element ${params.selector}`,
+          data: res,
+          params: params
+        });
+      }
+
+      return defer.reject({
+        result: 'fail',
+        message: `href ${params.value} not found in element ${params.selector}`,
+        error: res,
+        params: params
+      });
+    },(err) => {
+      return defer.reject({
+        result: 'fail',
+        message: `error on get classes of element ${params.selector}`,
+        error: err,
+        params: params
+      });
+    });
+
+    return defer.promise;
+  }
+
 }
