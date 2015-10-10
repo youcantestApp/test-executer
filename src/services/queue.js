@@ -17,8 +17,9 @@ export default class QueueService {
 
     amqp.connect(this[instanceUrl]).then((conn) => {
       conn.createChannel().then((channel) => {
+        channel.prefetch(queueConfigs.PREFETCH_NUMBER);
+        console.log(queueConfigs);
       	var queue = channel.assertQueue(this[instanceConfig].main, queueConfigs.queue.options).then(() => {
-          channel.prefetch(queueConfigs.PREFETCH_NUMBER);
 
           this.channel = channel;
 
@@ -43,19 +44,22 @@ export default class QueueService {
 
     this.channel.consume(this[instanceConfig].main, (message) => {
       console.log("[x] message received");
-      this.channel.ack(message);
 
+      let that = this;
       try {
         let content = message.content.toString();
         content = JSON.parse(content);
 
         handler(content).fail(()=> {
-          this.publishError(message.content);
+          that.publishError(message.content);
+        }).fin(() => {
+          that.channel.ack(message).then((res) => console.log('acked', res));
         });
       }
       catch(error) {
         this.publishError(message.content);
         console.log({message: 'error on parse message', err: error});
+        that.channel.ack(message).then((res) => console.log('acked', res));
       }
     }, queueConfigs.queue.consumeOpts);
   }
